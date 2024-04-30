@@ -6,7 +6,7 @@
 # pylint: disable-msg=R0913
 
 """
-Module Docstring
+Script to calculate figure 6 from Anslow+ (subm.)
 """
 
 import numpy as np
@@ -24,7 +24,10 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
 def read_files():
     """
-    Docstring
+    Read the overlap probabilities from the Monte Carlo simulation output files
+
+    Returns:
+    - tuple: A tuple containing three floats (for varying D_min)
     """
 
     earth_1e2 = np.loadtxt('./overlap/montecarlo/Earth_1e2.txt', unpack=True)
@@ -36,7 +39,13 @@ def read_files():
 
 def calc_f_overlap(N):
     """
-    Docstring
+    Calculate the fraction of overlapping craters, according to equation 2.3
+
+    Parameters:
+    - N: Number of craters
+
+    Returns:
+    - f_overlap: Fraction of overlapping craters
     """
 
     try:
@@ -57,7 +66,12 @@ def calc_f_overlap(N):
 
 def crater_rate_vals():
     """
-    Docstring
+    Return the crater rate as a function of time for the Robbins (2014) and Marchi+ (2009)
+    chronologies
+
+    Returns:
+    - tuple: Two numpy arrays containing crater rates for Marchi+ and Robbins chronologies
+            respectively
     """
 
     t = np.linspace(0, 4.5, 10_000)
@@ -84,7 +98,16 @@ def crater_rate_vals():
 
 def model(y, t, a, b, c, tau):
     """
-    Docstring
+    ODE model describing the change in crater counts over time.
+
+    Parameters:
+    - y: Array containing current values of N, N_overlap
+    - t: Array of time
+    - a, b, c: Parameters describing crater rate
+    - tau: Ferrocyanide salt lifetime
+
+    Returns:
+    - dydt: Array containing dN/dt, dN_overlap/dt
     """
 
     N, No = y
@@ -100,7 +123,14 @@ def model(y, t, a, b, c, tau):
 
 def crater_rate(t, a, b, c):
     """
-    Docstring
+    Calculates the (scaled) crater rate on the Earth for a given impact chronology
+
+    Parameters:
+    - t: Time
+    - a, b, c: Parameters describing crater rate
+
+    Returns:
+    - R_in: crater rate
     """
 
     R_in = a * b * np.exp(b * t) + c
@@ -114,7 +144,16 @@ def crater_rate(t, a, b, c):
 
 def calc_N_overlap(t, solution, a, b, c):
     """
-    Docstring
+    Calculates the number of overlapping craters as a function of time
+
+    Parameters:
+    - t: time
+    - solution: Solution of the ODE model (N, N_overlap)
+    - a, b, c: Parameters describing impact chronology
+
+    Returns:
+    - t_disc: time
+    - N_overlap: Number of overlapping craters
     """
 
     t_disc = np.linspace(3.4, 4.5, 4500) * 1e9
@@ -153,7 +192,8 @@ def calc_N_overlap(t, solution, a, b, c):
 
 def main():
     """
-    Docstring
+    Calculates figure 6: the cumulative number of overlapping craters on Earth
+    suitable for prebiotic chemistry.
     """
 
     fig_width, fig_height = set_size('thesis', 1, (1, 1))

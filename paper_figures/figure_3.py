@@ -4,7 +4,7 @@
 # pylint: disable-msg=R0915
 
 """
-Module Docstring
+Script to calculate figure 3 from Anslow+ (subm.)
 """
 
 import numpy as np
@@ -21,7 +21,8 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
 def main():
     """
-    Docstring
+    Calculates figure 3: the impact crater diameter as a function of the impactor
+    diameter
     """
 
     D_imp = np.logspace(0, 4, 100)

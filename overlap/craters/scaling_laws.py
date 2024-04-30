@@ -3,7 +3,7 @@
 # pylint: disable-msg=W0613
 
 """
-Module docstring
+Module containing methods to calculate crater diameter from impactor properties
 """
 
 import numpy as np
@@ -11,7 +11,17 @@ import numpy as np
 
 def calc_transient_crater(D_imp, M_imp, v_imp, rho_imp, theta_imp):
     """
-    Docstring
+    Calculate the diameter of the transient crater.
+
+    Parameters:
+    - D_imp (float): impactor diameter
+    - M_imp (float): impactor mass
+    - v_imp (float): impact velocity
+    - rho_imp (float): impactor bulk Density
+    - theta_imp (float): impact angle
+
+    Returns:
+    - float: Diameter of the transient crater
     """
 
     rho_tar = 2.5e3
@@ -26,7 +36,17 @@ def calc_transient_crater(D_imp, M_imp, v_imp, rho_imp, theta_imp):
 
 def calc_crater_diameter(D_imp, M_imp, v_imp, theta, rho_imp=0.6e3):
     """
-    Docstring
+    Calculate the final crater diameter.
+
+    Parameters:
+    - D_imp (float): impactor diameter
+    - M_imp (float): impactor mass
+    - v_imp (float): impact velocity
+    - theta (float): Impact angle
+    - rho_imp (float): impactor bulk density
+
+    Returns:
+    - float: Final crater diameter
     """
 
     D_tr = calc_transient_crater(D_imp, M_imp, v_imp, rho_imp, theta)

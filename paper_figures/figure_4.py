@@ -5,7 +5,7 @@
 # pylint: disable-msg=W0703
 
 """
-Module Docstring
+Script to calculate figure 4 from Anslow+ (subm.)
 """
 
 import numpy as np
@@ -22,7 +22,10 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
 def read_files():
     """
-    Docstring
+    Read the overlap probabilities from the Monte Carlo simulation output files
+
+    Returns:
+    - tuple: A tuple containing three floats (for varying D_min)
     """
 
     earth_1e2 = np.loadtxt('./overlap/montecarlo/Earth_1e2.txt', unpack=True)
@@ -38,7 +41,8 @@ def read_files():
 
 def main():
     """
-    Docstring
+    Calculates figure 4: the fraction of overlapping craters (as a function of the
+    number of craters on the surface)
     """
 
     fig_width, fig_height = set_size('thesis', 1, (1, 1))

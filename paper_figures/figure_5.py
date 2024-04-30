@@ -6,7 +6,7 @@
 # pylint: disable-msg=W0632
 
 """
-Module Docstring
+Script to calculate figure 5 from Anslow+ (subm.)
 """
 
 import numpy as np
@@ -24,7 +24,13 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
 def calc_f_overlap(N):
     """
-    Docstring
+    Calculate the fraction of overlapping craters, according to equation 2.3
+
+    Parameters:
+    - N: Number of craters
+
+    Returns:
+    - f_overlap: Fraction of overlapping craters
     """
 
     try:
@@ -45,7 +51,10 @@ def calc_f_overlap(N):
 
 def read_files():
     """
-    Docstring
+    Read the overlap probabilities from the Monte Carlo simulation output files
+
+    Returns:
+    - tuple: A tuple containing three floats (for varying D_min)
     """
 
     earth_1e2 = np.loadtxt('./overlap/montecarlo/Earth_1e2.txt', unpack=True)
@@ -57,7 +66,12 @@ def read_files():
 
 def crater_rate_vals():
     """
-    Docstring
+    Return the crater rate as a function of time for the Robbins (2014) and Marchi+ (2009)
+    chronologies
+
+    Returns:
+    - tuple: Two numpy arrays containing crater rates for Marchi+ and Robbins chronologies
+            respectively
     """
 
     t = np.linspace(0, 4.5, 10_000) * 1e9
@@ -79,7 +93,8 @@ def crater_rate_vals():
 
 def main():
     """
-    Docstring
+    Calculates figure 5, which shows the number of overlapping craters on the surface of the Earth,
+    suitable for prebiotic chemistry (in steady-state).
     """
 
     R_ins = np.logspace(-4, 5, 500)

@@ -2,4 +2,4 @@
 
 # overlap
 
-This repository contains the Monte Carlo overlap model used in Anslow et al. 2024 Astrobiology (in prep.), and simple scripts to reproduce figures 2-7.
+This repository contains the Monte Carlo overlap model and atmospheric entry code used in Anslow et al. 2024 RSPA (subm.), and simple scripts to reproduce figures 1-6.

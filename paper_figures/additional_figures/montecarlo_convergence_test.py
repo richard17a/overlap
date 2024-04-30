@@ -6,7 +6,7 @@
 # pylint: disable-msg=W0632
 
 """
-Module Docstring
+Script to demonstrate convergence of Monte Carlo overlap model
 """
 
 import numpy as np
@@ -23,7 +23,10 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
 def calc_probs():
     """
-    Docstring
+    Calcualtes the probability of overlapping craters, saving it to output files
+
+    Returns:
+    - tuple: Two arrays containing the number of points and the probabilities
     """
 
     npoints_array = np.logspace(2, 5, 10)
@@ -54,7 +57,7 @@ def calc_probs():
 
 def main():
     """
-    Docstring
+    Plots the convergence test, demonstrating the required number of craters for converegence
     """
 
     fig_width, fig_height = set_size('thesis', 1, (1, 1))

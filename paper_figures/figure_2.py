@@ -4,7 +4,7 @@
 # pylint: disable-msg=E1101
 
 """
-Module Docstring
+Script to calculate figure 2 from Anslow+ (subm.)
 """
 
 import numpy as np
@@ -21,7 +21,8 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
 def main():
     """
-    Docstring
+    Calculates figure 2: the trajectory of cometary impactors as a function of initial
+    velocity and initial diameter
     """
 
     fig_width, fig_height = set_size('thesis', 1, (1, 1))

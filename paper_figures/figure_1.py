@@ -2,7 +2,7 @@
 # pylint: disable-msg=E1101
 
 """
-Docstring
+Script to calculate figure 1 from Anslow+ (subm.)
 """
 
 import numpy as np
@@ -19,7 +19,13 @@ fig_width, fig_height = set_size('thesis', 1, (1, 1))
 
 def get_data():
     """
-    Docstring NEED TO CHECK ALL OF THESE VALUES (le Feuvre 2011)
+    Calibration points for crater ages from le Feuvre & Wieczorek (2011). Contentious refers to
+    teh calibration point that is not agred upon by all chronologies used.
+
+    Returns:
+    - tuple: Four arrays containing age, contentious time, crater counts, and contentious
+            crater count
+
     """
 
     age = np.array([0.025, 0.053, 0.109, 0.80, 3.15, 3.22, 3.30,\
@@ -35,7 +41,8 @@ def get_data():
 
 def main():
     """
-    Docstring
+    Calculates figure 1: the impact chronologies that will be used in our overlapping craters
+    model
     """
 
     t = np.linspace(0, 4570, 10_000)

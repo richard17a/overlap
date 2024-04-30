@@ -4,7 +4,8 @@
 # pylint: disable-msg=E1101
 
 """
-Module Docstring
+Module containing classes and methods required for monte carlo overlap
+model
 """
 
 from enum import Enum
@@ -17,7 +18,7 @@ from cmcrameri import cm
 
 class EarthMoon(Enum):
     """
-    Docstring
+    Classifier to allow calculation for Earth and Moon respectively
     """
     EARTH = 0
     MOON = 1
@@ -25,11 +26,17 @@ class EarthMoon(Enum):
 
 class Crater:
     """
-    Docstring
+    Class representing a crater with location and size
     """
     def __init__(self, x, y, z, r):
         """
-        Docstring
+        Initialize a crater with its location and size.
+
+        Parameters:
+        - x (float): x-coordinate of the crater center
+        - y (float): y-coordinate of the crater center
+        - z (float): z-coordinate of the crater center
+        - r (float): radius of the crater
         """
         self.x = x
         self.y = y
@@ -40,7 +47,15 @@ class Crater:
 @numba.jit(nopython=True)
 def generate_radius(sfd_index, rmin, rmax):
     """
-    Docstring
+    Generate a value for radius from a power-law size-frequency distribution.
+
+    Parameters:
+    - sfd_index (float): Power-law index of the size-frequency distribution
+    - rmin (float): Minimum radius
+    - rmax (float): Maximum radius
+
+    Returns:
+    - float: crater radius
     """
 
     while True:
@@ -58,7 +73,16 @@ def generate_radius(sfd_index, rmin, rmax):
 @numba.jit(nopython=True)
 def generate_radii(sfd_index, rmin, rmax, npoints):
     """
-    Docstring
+    Generate an array of radii from a power-law size-frequency distribution.
+
+    Parameters:
+    - sfd_index (float): power-law index of SFD
+    - rmin (float): minimum radius
+    - rmax (float): maximum radius
+    - npoints (int): number of craters
+
+    Returns:
+    - numpy.ndarray: radii
     """
 
     radii = np.empty(npoints)
@@ -71,7 +95,14 @@ def generate_radii(sfd_index, rmin, rmax, npoints):
 
 def generate_latitudes(npoints):
     """
-    Docstring
+    Generate an array of latitudes describing location of craters on the
+    surface of a sphere.
+
+    Parameters:
+    - npoints (int): Number of craters
+
+    Returns:
+    - numpy.ndarray: latitudes
     """
 
     latitudes = np.random.rand(npoints) * np.pi - np.pi / 2
@@ -81,7 +112,14 @@ def generate_latitudes(npoints):
 
 def generate_longitudes(npoints):
     """
-    Docstring
+    Generate an array of longitudes describing location of craters on the
+    surface of a sphere.
+
+    Parameters:
+    - npoints (int): Number of craters
+
+    Returns:
+    - numpy.ndarray: longitudes
     """
 
     longitudes = np.random.rand(npoints) * 2 * np.pi
@@ -91,7 +129,17 @@ def generate_longitudes(npoints):
 
 def generate_craters(sfd_index, rmin, rmax, npoints, body=EarthMoon.EARTH):
     """
-    Docstring
+    Generate a population of craters on the surface of a sphere.
+
+    Parameters:
+    - sfd_index (float): index of the power-law SFD
+    - rmin (float): minimum radius
+    - rmax (float): maximum radius
+    - npoints (int): number of craters
+    - body (EarthMoon): Earth/Moon classifier
+
+    Returns:
+    - numpy.ndarray: craters
     """
 
     latitudes = generate_latitudes(npoints)
@@ -132,7 +180,7 @@ def generate_craters(sfd_index, rmin, rmax, npoints, body=EarthMoon.EARTH):
 
 def main():
     """
-    Docstring
+    Main function to generate and plot crater population properties
     """
 
     matplotlib.rcParams['mathtext.fontset'] = 'cm'
