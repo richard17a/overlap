@@ -1,9 +1,9 @@
 # pylint: disable-msg=E1101
 # pylint: disable-msg=R0914
 # pylint: disable-msg=C0103
-# pylint: disable-msg=R0915
 # pylint: disable-msg=W0703
 # pylint: disable-msg=W0632
+# pylint: disable-msg=R0913
 
 """
 Module Docstring
@@ -11,9 +11,8 @@ Module Docstring
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import matplotlib
-from scipy.optimize import curve_fit
+from scipy.integrate import odeint
 from cmcrameri import cm
 from overlap.montecarlo.check_intersection import calc_frac_overlaps
 from overlap.montecarlo.generate_craters import EarthMoon
@@ -21,14 +20,6 @@ from overlap.utils import set_size
 
 matplotlib.rcParams['mathtext.fontset'] = 'cm'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
-
-
-def tanh_function(x, a, b):
-    """
-    Docstring
-    """
-
-    return a * np.tanh(b * x)
 
 
 def read_files():
@@ -43,13 +34,13 @@ def read_files():
     return earth_1e2, earth_1e3, earth_1e4
 
 
-def fit_overlap_curves():
+def calc_f_overlap(N):
     """
     Docstring
     """
 
     try:
-        earth_1e2, earth_1e3, earth_1e4 = read_files()
+        _, earth_1e3, _ = read_files()
 
     except Exception:
         npoints = 10_000
@@ -59,15 +50,9 @@ def fit_overlap_curves():
 
         calc_frac_overlaps(sfd_index, rmin, rmax, npoints, EarthMoon.EARTH)
 
-        earth_1e2, earth_1e3, earth_1e4 = read_files()
+        _, earth_1e3, _ = read_files()
 
-    nums = np.logspace(5, 12, 1000)
-
-    params_2, _ = curve_fit(tanh_function, nums, 1 - earth_1e2 ** nums, p0=[1, 1e-8])
-    params_3, _ = curve_fit(tanh_function, nums, 1 - earth_1e3 ** nums, p0=[1, 1e-8])
-    params_4, _ = curve_fit(tanh_function, nums, 1 - earth_1e4 ** nums, p0=[1, 1e-8])
-
-    return params_2, params_3, params_4
+    return 1 - earth_1e3 ** N
 
 
 def crater_rate_vals():
@@ -94,7 +79,76 @@ def crater_rate_vals():
     dndt_marchi = np.abs(np.gradient(N1_marchi, t)) / 1e9 * (1e3 / 1e2) ** 2
     dndt_robbins = np.abs(np.gradient(N1_robbins, t)) / 1e9 * (1e3 / 1e2) ** 2
 
-    return dndt_marchi, dndt_robbins
+    return t, dndt_marchi, dndt_robbins
+
+
+def model(y, t, a, b, c, tau):
+    """
+    Docstring
+    """
+
+    N, No = y
+
+    R_in = crater_rate(t, a, b, c)
+
+    dNdt = R_in - N / tau
+
+    dNodt = calc_f_overlap(N) * R_in - No / tau
+
+    return [dNdt, dNodt]
+
+
+def crater_rate(t, a, b, c):
+    """
+    Docstring
+    """
+
+    R_in = a * b * np.exp(b * t) + c
+
+    A_m = 4 * np.pi * (1737 ** 2)
+
+    R_in = R_in * A_m * 13.5 * (1e3 / 1e2) ** 2
+
+    return R_in
+
+
+def calc_N_overlap(t, solution, a, b, c):
+    """
+    Docstring
+    """
+
+    t_disc = np.linspace(3.4, 4.5, 4500) * 1e9
+    N_overlap = np.zeros(len(t_disc))
+
+    for counter, _ in enumerate(t_disc):
+
+        if counter < len(t_disc) - 1:
+
+            delta_N = (a * (np.exp(b * t_disc[counter + 1]) - 1) + c * t_disc[counter + 1]) -\
+                        (a * (np.exp(b * t_disc[counter]) - 1) + c * t_disc[counter])
+            A_m = 4 * np.pi * (1737 ** 2)
+            delta_N = delta_N * A_m * 13.5 * (1e3 / 1e2) ** 2
+
+            N = solution[:, 0][(t > t_disc[counter]) & (t <= t_disc[counter + 1])]
+
+            prob_overlap = calc_f_overlap(np.mean(N))
+
+            N_overlap[counter] = delta_N * prob_overlap
+
+        else:
+
+            delta_N = (a * (np.exp(b * t_disc[-1]) - 1) + c * t_disc[-1]) -\
+                        (a * (np.exp(b * t_disc[-2]) - 1) + c * t_disc[-2])
+            A_m = 4 * np.pi * (1737 ** 2)
+            delta_N = delta_N * A_m * 13.5 * (1e3 / 1e2) ** 2
+
+            N = solution[:, 0][(t > t_disc[counter - 1])]
+
+            prob_overlap = calc_f_overlap(np.mean(N))
+
+            N_overlap[counter] = delta_N * prob_overlap
+
+    return t_disc, N_overlap
 
 
 def main():
@@ -102,81 +156,93 @@ def main():
     Docstring
     """
 
-    params_2, params_3, params_4 = fit_overlap_curves()
-
-    R_ins = np.logspace(-4, 5, 500)
-    taus = np.logspace(1, 6, 500)
-
-    r_grid, t_grid = np.meshgrid(R_ins, taus)
-
-    steady_state2 = np.zeros_like(r_grid)
-    steady_state3 = np.zeros_like(r_grid)
-    steady_state4 = np.zeros_like(r_grid)
-
-    for i, R_in in enumerate(R_ins):
-
-        for j, tau in enumerate(taus):
-
-            steady_state2[j, i] =  R_in * tau * tanh_function(R_in * tau, params_2[0], params_2[1])
-            steady_state3[j, i] =  R_in * tau * tanh_function(R_in * tau, params_3[0], params_3[1])
-            steady_state4[j, i] =  R_in * tau * tanh_function(R_in * tau, params_4[0], params_4[1])
-
-    dndt_marchi, dndt_robbins = crater_rate_vals()
-
     fig_width, fig_height = set_size('thesis', 1, (1, 1))
+
+    f_comet = 0.01
+    f_success = 0.01
+    f_crust = 0.2
+
+    t = np.linspace(3.4, 4.5, 1_000_000) * 1e9
+    y0 = [0, 0]
+
+    a = 7.26e-31
+    b = 16.7e-9
+    c = 1.19e-12
+
+    solution_1e1 = odeint(model, y0, t, args=(a, b, c, 1e1))
+    t_disc_1e1, N_overlap_1e1 = calc_N_overlap(t, solution_1e1, a, b, c)
+
+    solution_1e2 = odeint(model, y0, t, args=(a, b, c, 1e2))
+    t_disc_1e2, N_overlap_1e2 = calc_N_overlap(t, solution_1e2, a, b, c)
+
+    solution_1e3 = odeint(model, y0, t, args=(a, b, c, 1e3))
+    t_disc_1e3, N_overlap_1e3 = calc_N_overlap(t, solution_1e3, a, b, c)
 
     _ = plt.figure(figsize=(fig_width, fig_height))
 
-    contour = plt.contourf(r_grid, t_grid, steady_state3 / 100, norm=LogNorm(),\
-                           extend='both', levels=np.logspace(-6, 3, 100), cmap=cm.bamako)
+    plt.plot(t_disc_1e1 / 1e9, f_success * f_crust * f_comet * np.cumsum(N_overlap_1e1),\
+            color=cm.batlow(0), label=r'$\tau_{\rm Fe(CN)_6} = 10\,$yr')
 
-    cbar = plt.colorbar(contour, ticks=[1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e-0, 1e1, 1e2, 1e3], )
-    cbar.set_label(r"$N_{\rm overlap}$", fontsize=12)
+    plt.plot(t_disc_1e2 / 1e9, f_success * f_crust * f_comet * np.cumsum(N_overlap_1e2),\
+            color=cm.batlow(0.33), label=r'$\tau_{\rm Fe(CN)_6} = 100\,$yr')
 
-    plt.contour(r_grid, t_grid, steady_state3 / 100, [.9], linestyles=[':'],\
-                colors=['k'], linewidths=[1.])
+    plt.plot(t_disc_1e3 / 1e9, f_success * f_crust * f_comet * np.cumsum(N_overlap_1e3),\
+            color=cm.batlow(0.66), label=r'$\tau_{\rm Fe(CN)_6} = 1000\,$yr')
 
-    for c in contour.collections:
-        c.set_edgecolor("face")
+    a = 1.23e-15
+    b = 7.85e-9
+    c = 1.30e-12
 
-    plt.axvline(dndt_marchi[0], color=cm.bamako(0.8), ls='--', linewidth=0.9)
-    plt.axvline(dndt_marchi[8900],  color='k', ls='--', linewidth=0.9)
-    plt.axvline(dndt_robbins[8900], color='k', ls='-.', linewidth=0.9)
+    solution = odeint(model, y0, t, args=(a, b, c, 1e1))
+    t_disc_1e1, N_overlap_1e1 = calc_N_overlap(t, solution, a, b, c)
 
-    plt.text(4.0e-2, 2e1, r"$1.0\,{\rm Gyr}$ crater rate", rotation=90,\
-             color=cm.bamako(0.9), fontsize=11)
-    plt.text(2.5e+2, 9e3, r"$4.0\,{\rm Gyr}$ crater rate", rotation=90,\
-             color='k', fontsize=11)
+    solution = odeint(model, y0, t, args=(a, b, c, 1e2))
+    t_disc_1e2, N_overlap_1e2 = calc_N_overlap(t, solution, a, b, c)
 
-    plt.text(9e2, 5e1, "1 overlapping crater", color="k", rotation=-54, fontsize=10)
+    solution = odeint(model, y0, t, args=(a, b, c, 1e3))
+    t_disc_1e3, N_overlap_1e3 = calc_N_overlap(t, solution, a, b, c)
+
+    plt.plot(t_disc_1e1 / 1e9, f_success * f_crust * f_comet * np.cumsum(N_overlap_1e1), ls='--',\
+            color=cm.batlow(0))
+
+    plt.plot(t_disc_1e2 / 1e9, f_success * f_crust * f_comet * np.cumsum(N_overlap_1e2), ls='--',\
+            color=cm.batlow(0.33))
+
+    plt.plot(t_disc_1e3 / 1e9, f_success * f_crust * f_comet * np.cumsum(N_overlap_1e3), ls='--',\
+            color=cm.batlow(0.66))
+
+    plt.axhspan(1e-13, 1e0, color='tab:red', alpha=0.1, zorder=0)
+    plt.axvspan(4.5, 4., color='tab:gray', alpha=0.25, zorder=0)
 
     plt.yscale('log')
-    plt.xscale('log')
 
-    plt.xlabel(r"Crater rate [yr$^{-1}$]", fontsize=12)
-    plt.ylabel(r"Ferrocyanide lifetime [yr]", fontsize=12)
+    plt.xlim(3.5, 4.5)
+    plt.ylim(1e-8, 1e4)
 
-    ax = plt.gca()
+    plt.xlabel('Age [Gyr]', fontsize=12)
+    plt.ylabel('Cumulative number of overlapping\ncraters suitable for prebiotic chemistry',\
+                fontsize=12)
 
-    ax.xaxis.set_major_locator(matplotlib.ticker.LogLocator(numticks=9))
-    ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(numticks=999, subs="auto"))
+    initial_legend = plt.legend(fontsize=11, loc='upper left')
 
-    ax.tick_params(axis='x', which='both', labelsize=11)
-    ax.tick_params(axis='y', which='both', labelsize=11)
-
-    legend_lines = [
-        plt.Line2D([], [], color='tab:gray', linestyle='--', linewidth=1.0,\
-                   label=r'Marchi et al. 2009'),
-        plt.Line2D([], [], color='tab:gray', linestyle='-.', linewidth=1.0,\
-                   label=r'Robbins 2014')
+    extra_legend_handles = [
+        plt.Line2D([], [], color='tab:gray', linestyle='-', label='Robbins 2014'),
+        plt.Line2D([], [], color='tab:gray', linestyle='--', label='Marchi et al. 2009')
     ]
+    extra_legend = plt.legend(handles=extra_legend_handles, fontsize=11, loc='lower right')
 
-    plt.legend(handles=legend_lines, loc='upper left', fontsize=10)
+    plt.gca().add_artist(extra_legend)
+    plt.gca().add_artist(initial_legend)
 
-    # plt.savefig('./paper_figures/ferro_lifetime_crater_rate_contour.pdf',\
-    #             format='pdf', bbox_inches='tight')
+    plt.minorticks_on()
+
+    plt.gca().yaxis.get_major_locator().set_params(numticks=8)
+    plt.gca().yaxis.get_minor_locator().set_params(numticks=99, subs=[.2, .4, .6, .8])
+
+#    plt.savefig('./steady_state_craters.pdf', format='pdf', bbox_inches='tight')
 
     plt.show()
+
 
 
 if __name__ == "__main__":

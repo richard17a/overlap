@@ -53,7 +53,7 @@ def check_within_radii(crater_1, craters, D_min=1e3, body=EarthMoon.EARTH):
 
 
 @jit(nopython=True)
-def count_overlaps(craters_i, craters_f, npoints):
+def count_overlaps(craters_i, craters_f, npoints, body=EarthMoon.EARTH):
     """
     Docstring
     """
@@ -64,13 +64,13 @@ def count_overlaps(craters_i, craters_f, npoints):
     for counter in range(len(craters_i)):
         crater_i = craters_i[counter]
 
-        intersect_distances2 = check_within_radii(crater_i, craters_f, 1e2)
+        intersect_distances2 = check_within_radii(crater_i, craters_f, 1e2, body)
         num_overlaps2 += (npoints - len(intersect_distances2)) / npoints
 
-        intersect_distances3 = check_within_radii(crater_i, craters_f, 1e3)
+        intersect_distances3 = check_within_radii(crater_i, craters_f, 1e3, body)
         num_overlaps3 += (npoints - len(intersect_distances3)) / npoints
 
-        intersect_distances4 = check_within_radii(crater_i, craters_f, 1e4)
+        intersect_distances4 = check_within_radii(crater_i, craters_f, 1e4, body)
         num_overlaps4 += (npoints - len(intersect_distances4)) / npoints
 
     return num_overlaps2, num_overlaps3, num_overlaps4
@@ -86,7 +86,8 @@ def calc_frac_overlaps(sfd_index, rmin, rmax, npoints, body=EarthMoon.EARTH):
 
     print('Generated craters')
 
-    num_overlaps2, num_overlaps3, num_overlaps4 = count_overlaps(craters_i, craters_f, npoints)
+    num_overlaps2, num_overlaps3, num_overlaps4 = count_overlaps(craters_i, craters_f,\
+                                                                npoints, body)
 
     prob2 = num_overlaps2 / npoints
     prob3 = num_overlaps3 / npoints
@@ -115,9 +116,9 @@ def main():
     Docstring
     """
 
-    npoints = 200_000
+    npoints = 500_000
     sfd_index = 2.0
-    rmin = 1e3
+    rmin = 1e2
     rmax = 300e3
 
     calc_frac_overlaps(sfd_index, rmin, rmax, npoints, EarthMoon.EARTH)
